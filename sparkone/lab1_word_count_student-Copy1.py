@@ -282,7 +282,7 @@ import os.path
 #fileName = os.path.join(baseDir, inputPath)
 
 shakespeareRDD = (sc
-                  .textFile('file:///home/sunil/data/spark/intro/pg100.txt', 8)
+                  .textFile('file:///home/loq/sunil/spark/pg100.txt', 8)
                   .map(removePunctuation))
 
 print '\n'.join(shakespeareRDD.zipWithIndex().map(lambda (l, num): '{0}: {1}'.format(num, l)).take(15))
@@ -313,29 +313,27 @@ print shakespeareWordCount
 # #### The next step is to filter out the empty elements.  Remove all entries where the word is `''`.
 
 # TODO: Replace <FILL IN> with appropriate code
-shakeWordsRDD = shakespeareWordsRDD.filter(lambda x: x != '\n')
+shakeWordsRDD = shakespeareWordsRDD.filter(lambda x: x not in ['\n',''])
 shakeWordCount = shakeWordsRDD.count()
 print shakeWordCount
+print shakespeareWordsRDD.top(5)
 
 
 # TEST Remove empty elements (4e)
 #Test.assertEquals(shakeWordCount, 882996, 'incorrect value for shakeWordCount')
 
-'''
 # #### ** (4f) Count the words **
-# #### We now have an RDD that is only words.  Next, let's apply the `wordCount()` function to produce a list of word counts. We can view the top 15 words by using the `takeOrdered()` action; however, since the elements of the RDD are pairs, we need a custom sort function that sorts using the value part of the pair.
-# #### You'll notice that many of the words are common English words. These are called stopwords. In a later lab, we will see how to eliminate them from the results.
+# #### We now have an RDD that is only words.  Next, let's apply the `wordCount()` function to produce a list of
+# word counts. We can view the top 15 words by using the `takeOrdered()` action; however, since the
+# elements of the RDD are pairs, we need a custom sort function that sorts using the value part of the pair.
+# #### You'll notice that many of the words are common English words. These are called stopwords. In a later lab,
+# we will see how to eliminate them from the results.
 # #### Use the `wordCount()` function and `takeOrdered()` to obtain the fifteen most common words and their counts.
 
-# In[ ]:
-
 # TODO: Replace <FILL IN> with appropriate code
-top15WordsAndCounts = <FILL IN>
+top15WordsAndCounts = shakeWordsRDD.map(wordCount).takeOrdered(15)
 print '\n'.join(map(lambda (w, c): '{0}: {1}'.format(w, c), top15WordsAndCounts))
-
-
-# In[ ]:
-
+'''
 # TEST Count the words (4f)
 Test.assertEquals(top15WordsAndCounts,
                   [(u'the', 27361), (u'and', 26028), (u'i', 20681), (u'to', 19150), (u'of', 17463),
