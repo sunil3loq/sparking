@@ -281,8 +281,10 @@ import os.path
 #inputPath = os.path.join('cs100', 'lab1', 'shakespeare.txt')
 #fileName = os.path.join(baseDir, inputPath)
 
+fName1 = '/home/sunil/data/spark/intro/pg100.txt'
+fName2 = '/home/loq/sunil/spark/pg100.txt'
 shakespeareRDD = (sc
-                  .textFile('file:///home/loq/sunil/spark/pg100.txt', 8)
+                  .textFile('file://'+fName1, 8)
                   .map(removePunctuation))
 
 print '\n'.join(shakespeareRDD.zipWithIndex().map(lambda (l, num): '{0}: {1}'.format(num, l)).take(15))
@@ -315,8 +317,11 @@ print shakespeareWordCount
 # TODO: Replace <FILL IN> with appropriate code
 shakeWordsRDD = shakespeareWordsRDD.filter(lambda x: x not in ['\n',''])
 shakeWordCount = shakeWordsRDD.count()
+
 print shakeWordCount
-print shakespeareWordsRDD.top(5)
+
+tes=sc.parallelize(['cats', 'elephants', 'rats', 'rats', 'cats'],4)
+print type(tes)
 
 
 # TEST Remove empty elements (4e)
@@ -331,8 +336,9 @@ print shakespeareWordsRDD.top(5)
 # #### Use the `wordCount()` function and `takeOrdered()` to obtain the fifteen most common words and their counts.
 
 # TODO: Replace <FILL IN> with appropriate code
-top15WordsAndCounts = shakeWordsRDD.map(wordCount).takeOrdered(15)
+top15WordsAndCounts = wordCount(shakeWordsRDD).takeOrdered(15,lambda x: -x[1])
 print '\n'.join(map(lambda (w, c): '{0}: {1}'.format(w, c), top15WordsAndCounts))
+
 '''
 # TEST Count the words (4f)
 Test.assertEquals(top15WordsAndCounts,

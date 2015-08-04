@@ -30,7 +30,8 @@
 
 # 
 # ### **Part 1: Apache Web Server Log file format**
-# ####The log files that we use for this assignment are in the [Apache Common Log Format (CLF)](http://httpd.apache.org/docs/1.3/logs.html#common). The log file entries produced in CLF will look something like this:
+# ####The log files that we use for this assignment are in the [Apache Common Log Format (CLF)](http://httpd.apache.org/docs/1.3/logs.html#common).
+# The log file entries produced in CLF will look something like this:
 # `127.0.0.1 - - [01/Aug/1995:00:00:01 -0400] "GET /images/launch-logo.gif HTTP/1.0" 200 1839`
 #  
 # ####Each part of this log entry is described below.
@@ -92,6 +93,11 @@ import datetime
 
 from pyspark.sql import Row
 
+from pyspark import SparkContext
+
+sc=SparkContext('local','jaffa')
+
+
 month_map = {'Jan': 1, 'Feb': 2, 'Mar':3, 'Apr':4, 'May':5, 'Jun':6, 'Jul':7,
     'Aug':8,  'Sep': 9, 'Oct':10, 'Nov': 11, 'Dec': 12}
 
@@ -138,12 +144,10 @@ def parseApacheLogLine(logline):
         content_size  = size
     ), 1)
 
-
-# In[ ]:
-
+#changed one is-APACHE_ACCESS_LOG_PATTERN = '^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (.+)\s?(\S*)" (\d{3}) (\S+)'
+# 127.0.0.1 - - [01/Aug/1995:00:00:01 -0400] "GET /images/launch-logo.gif HTTP/1.0" 200 1839
 # A regular expression pattern to extract fields from the log line
 APACHE_ACCESS_LOG_PATTERN = '^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+)'
-
 
 # ### **(1b) Configuration and Initial RDD Creation**
 # ####We are ready to specify the input log file and create an RDD containing the parsed log file data. The log file has already been downloaded for you.
@@ -152,20 +156,21 @@ APACHE_ACCESS_LOG_PATTERN = '^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+)
 # ####Next, we use [`map(parseApacheLogLine)`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.map) to apply the parse function to each element (that is, a line from the log file) in the RDD and turn each line into a pair [`Row` object](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Row).
 # ####Finally, we cache the RDD in memory since we'll use it throughout this notebook.
 
-# In[ ]:
-
 import sys
 import os
-from test_helper import Test
+#from test_helper import Test
 
 baseDir = os.path.join('data')
 inputPath = os.path.join('cs100', 'lab2', 'apache.access.log.PROJECT')
 logFile = os.path.join(baseDir, inputPath)
 
+fName1 = 'file:///home/sunil/data/spark/intro/logg'
+
+
 def parseLogs():
     """ Read and parse log file """
     parsed_logs = (sc
-                   .textFile(logFile)
+                   .textFile(fName1)
                    .map(parseApacheLogLine)
                    .cache())
 
@@ -180,34 +185,35 @@ def parseLogs():
     failed_logs_count = failed_logs.count()
     if failed_logs_count > 0:
         print 'Number of invalid logline: %d' % failed_logs.count()
+        print 'sample failed logs here ---------------------->>>>'
         for line in failed_logs.take(20):
             print 'Invalid logline: %s' % line
-
+        print 'sample ends here <<<<-----------------------'
     print 'Read %d lines, successfully parsed %d lines, failed to parse %d lines' % (parsed_logs.count(), access_logs.count(), failed_logs.count())
     return parsed_logs, access_logs, failed_logs
 
 
-parsed_logs, access_logs, failed_logs = parseLogs()
-
+#parsed_logs, access_logs, failed_logs = parseLogs()
 
 # ### **(1c) Data Cleaning**
-# #### Notice that there are a large number of log lines that failed to parse. Examine the sample of invalid lines and compare them to the correctly parsed line, an example is included below. Based on your observations, alter the `APACHE_ACCESS_LOG_PATTERN` regular expression below so that the failed lines will correctly parse, and press `Shift-Enter` to rerun `parseLogs()`.
+# #### Notice that there are a large number of log lines that failed to parse. Examine the sample of invalid lines and compare them to the correctly parsed line,
+# an example is included below. Based on your observations, alter the `APACHE_ACCESS_LOG_PATTERN` regular expression below so that the failed lines will
+# correctly parse, and press `Shift-Enter` to rerun `parseLogs()`.
 #  
 # `127.0.0.1 - - [01/Aug/1995:00:00:01 -0400] "GET /images/launch-logo.gif HTTP/1.0" 200 1839`
 #  
-# #### If you not familar with Python regular expression [`search` function](https://docs.python.org/2/library/re.html#regular-expression-objects), now would be a good time to check up on the [documentation](https://developers.google.com/edu/python/regular-expressions). One tip that might be useful is to use an online tester like http://pythex.org or http://www.pythonregex.com. To use it, copy and paste the regular expression string below (located between the single quotes ') and test it against one of the 'Invalid logline' above.
-
-# In[ ]:
+# #### If you not familar with Python regular expression [`search` function](https://docs.python.org/2/library/re.html#regular-expression-objects),
+# now would be a good time to check up on the [documentation](https://developers.google.com/edu/python/regular-expressions).
+# One tip that might be useful is to use an online tester like http://pythex.org or http://www.pythonregex.com.
+# To use it, copy and paste the regular expression string below (located between the single quotes ') and test it against one of the 'Invalid logline' above.
 
 # TODO: Replace <FILL IN> with appropriate code
 
 # This was originally '^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+)'
-APACHE_ACCESS_LOG_PATTERN = <FILL IN>
+APACHE_ACCESS_LOG_PATTERN = '^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (.+)\s?(\S*)" (\d{3}) (\S+)'
 
+print '###################after changing the reg ex'
 parsed_logs, access_logs, failed_logs = parseLogs()
-
-
-# In[ ]:
 
 # TEST Data cleaning (1c)
 Test.assertEquals(failed_logs.count(), 0, 'incorrect failed_logs.count()')
@@ -221,11 +227,17 @@ Test.assertEquals(access_logs.count(), parsed_logs.count(), 'incorrect access_lo
 #  
 # #### **(2a) Example: Content Size Statistics**
 #  
-# ####Let's compute some statistics about the sizes of content being returned by the web server. In particular, we'd like to know what are the average, minimum, and maximum content sizes.
+# ####Let's compute some statistics about the sizes of content being returned by the web server. In particular, we'd like to know what are
+# the average, minimum, and maximum content sizes.
 #  
-# ####We can compute the statistics by applying a `map` to the `access_logs` RDD. The `lambda` function we want for the map is to extract the `content_size` field from the RDD. The map produces a new RDD containing only the `content_sizes` (one element for each Row object in the `access_logs` RDD). To compute the minimum and maximum statistics, we can use [`min()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.min) and [`max()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.max) functions on the new RDD. We can compute the average statistic by using the [`reduce`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.reduce) function with a `lambda` function that sums the two inputs, which represent two elements from the new RDD that are being reduced together. The result of the `reduce()` is the total content size from the log and it is to be divided by the number of requests as determined using the [`count()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.count) function on the new RDD.
-
-# In[ ]:
+# ####We can compute the statistics by applying a `map` to the `access_logs` RDD. The `lambda` function we want for the map is to extract the
+# `content_size` field from the RDD. The map produces a new RDD containing only the `content_sizes` (one element for each Row object in the `access_logs` RDD).
+# To compute the minimum and maximum statistics, we can use [`min()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.min) and
+# [`max()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.max) functions on the new RDD. We can compute the average statistic by using the
+# [`reduce`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.reduce) function with a `lambda` function that sums the two inputs,
+# which represent two elements from the new RDD that are being reduced together. The result of the `reduce()` is the total content size from the log and
+# it is to be divided by the number of requests as determined using the [`count()`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.count)
+# function on the new RDD.
 
 # Calculate statistics based on the content size.
 content_sizes = access_logs.map(lambda log: log.content_size).cache()
@@ -236,9 +248,14 @@ print 'Content Size Avg: %i, Min: %i, Max: %s' % (
 
 
 # #### **(2b) Example: Response Code Analysis**
-# ####Next, lets look at the response codes that appear in the log. As with the content size analysis, first we create a new RDD by using a `lambda` function to extract the `response_code` field from the `access_logs` RDD. The difference here is that we will use a [pair tuple](https://docs.python.org/2/tutorial/datastructures.html?highlight=tuple#tuples-and-sequences) instead of just the field itself. Using a pair tuple consisting of the response code and 1 will let us count how many records have a particular response code. Using the new RDD, we perform a [`reduceByKey`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.reduceByKey) function. `reduceByKey` performs a reduce on a per-key basis by applying the `lambda` function to each element, pairwise with the same key. We use the simple `lambda` function of adding the two values. Then, we cache the resulting RDD and create a list by using the [`take`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.take) function.
-
-# In[ ]:
+# ####Next, lets look at the response codes that appear in the log. As with the content size analysis, first we create a new RDD by using a
+# `lambda` function to extract the `response_code` field from the `access_logs` RDD. The difference here is that we will use a
+# [pair tuple](https://docs.python.org/2/tutorial/datastructures.html?highlight=tuple#tuples-and-sequences) instead of just the field itself.
+# Using a pair tuple consisting of the response code and 1 will let us count how many records have a particular response code.
+# Using the new RDD, we perform a [`reduceByKey`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.reduceByKey) function.
+# `reduceByKey` performs a reduce on a per-key basis by applying the `lambda` function to each element, pairwise with the same key.
+# We use the simple `lambda` function of adding the two values. Then, we cache the resulting RDD and create a list by using the
+# [`take`](http://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.RDD.take) function.
 
 # Response Code to Count
 responseCodeToCount = (access_logs
@@ -253,9 +270,10 @@ assert sorted(responseCodeToCountList) == [(200, 940847), (302, 16244), (304, 79
 
 
 # #### **(2c) Example: Response Code Graphing with `matplotlib`**
-# ####Now, lets visualize the results from the last example. We can visualize the results from the last example using [`matplotlib`](http://matplotlib.org/). First we need to extract the labels and fractions for the graph. We do this with two separate `map` functions with a `lambda` functions. The first `map` function extracts a list of of the response code values, and the second `map` function extracts a list of the per response code counts  divided by the total size of the access logs. Next, we create a figure with `figure()` constructor and use the `pie()` method to create the pie plot.
-
-# In[ ]:
+# ####Now, lets visualize the results from the last example. We can visualize the results from the last example using [`matplotlib`]
+# (http://matplotlib.org/). First we need to extract the labels and fractions for the graph. We do this with two separate `map` functions with a `lambda` functions.
+#  The first `map` function extracts a list of of the response code values, and the second `map` function extracts a list of the per response code counts
+# divided by the total size of the access logs. Next, we create a figure with `figure()` constructor and use the `pie()` method to create the pie plot.
 
 labels = responseCodeToCount.map(lambda (x, y): x).collect()
 print labels
@@ -263,11 +281,7 @@ count = access_logs.count()
 fracs = responseCodeToCount.map(lambda (x, y): (float(y) / count)).collect()
 print fracs
 
-
-# In[ ]:
-
 import matplotlib.pyplot as plt
-
 
 def pie_pct_format(value):
     """ Determine the appropriate format string for the pie chart percentage label
@@ -748,4 +762,4 @@ plt.xlabel('Hour')
 plt.ylabel('404 Errors')
 plt.plot(hoursWithErrors404, errors404ByHours)
 pass
-
+'''
