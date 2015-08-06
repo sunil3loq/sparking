@@ -1,3 +1,4 @@
+
 import sys
 from random import random
 from operator import add
@@ -68,6 +69,11 @@ class HungamaDataAnalyzer:
         metaDataset = metaParts.map(lambda p: Row(ivrid = p[0], songcode = p[1], businesscategory=p[2]))
         self.meta_dataFrame = sqlContext.createDataFrame(metaDataset)
 
+    def printSample(self):
+        print 'The metadata sample is>>>>>>>>'
+        print self.meta_dataFrame.take(15)
+        print 'The transaction data sample is>>>>>>>>'
+        print self.trans_dataFrame_x.take(15)
 
     def filterSongs(self):
 
@@ -85,15 +91,18 @@ class HungamaDataAnalyzer:
         self.trans_dataFrame_y = self.trans_dataFrame_y.withColumn('likes_y', udf(self.trans_dataFrame_y.duration_y))
 
 
-        # Groupby on the song and userid and assign a value for the user and song as to whether he/she ever liked the song
+        # Groupby on the song and userid and assign a value for the user and song as to whether he/she
+        # ever liked the song
         self.trans_dataFrame_x = self.trans_dataFrame_x.groupBy(self.trans_dataFrame_x.songcode_x,
                                                                 self.trans_dataFrame_x.msisdn_x).max()
-        self.trans_dataFrame_x = self.trans_dataFrame_x.withColumn('likes_summary_x', likef(self.trans_dataFrame_x['MAX(likes_x)']))
+        self.trans_dataFrame_x = self.trans_dataFrame_x.withColumn('likes_summary_x',
+                                                                   likef(self.trans_dataFrame_x['MAX(likes_x)']))
 
         # Groupby on the song and userid and assign a value for the user and song as to whether he/she ever liked the song
         self.trans_dataFrame_y = self.trans_dataFrame_y.groupBy(self.trans_dataFrame_y.songcode_y,
                                                                 self.trans_dataFrame_y.msisdn_y).max()
-        self.trans_dataFrame_y = self.trans_dataFrame_y.withColumn('likes_summary_y', likef(self.trans_dataFrame_y['MAX(likes_y)']))
+        self.trans_dataFrame_y = self.trans_dataFrame_y.withColumn('likes_summary_y',
+                                                                   likef(self.trans_dataFrame_y['MAX(likes_y)']))
 
         # Do a join with the metadata to retrieve the category for the song involved
         self.trans_dataFrame_x = self.trans_dataFrame_x.join(self.meta_dataFrame,
@@ -187,15 +196,15 @@ if __name__ == "__main__":
     sc = SparkContext(appName="HungamaOld")
     sqlContext = SQLContext(sc)
 
-    inputFile = 'spark/data/content_data.csv'
-    metaFile =  'spark/data/metadata_dataendless.csv'
+    inputFile = 'file:///home/loq/sunil/spark/content_data.csv'
+    metaFile =  'file:///home/loq/sunil/spark/metadata_dataendless.csv'
 
     da = HungamaDataAnalyzer(inputFile=inputFile,
                              metaFile=metaFile)
 
     da.read_input(sc, sqlContext)
-    da.analyzeData()
-    da.show_data()
-
+    #da.analyzeData()
+    #da.show_data()
+    da.printSample()
 
 
